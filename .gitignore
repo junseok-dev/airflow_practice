@@ -150,7 +150,9 @@ activemq-data/
 # Environments
 .env
 .envrc
+.local-notes.md
 .venv
+airflow_practice_env/
 env/
 venv/
 ENV/
@@ -216,3 +218,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data
+data/raw/
+data/processed/
+data/mart/
+.airflow/
+*.log
+
+# Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
