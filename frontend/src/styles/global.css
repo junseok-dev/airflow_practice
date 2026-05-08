@@ -62,6 +62,37 @@ h2 {
   font-size: 17px;
 }
 
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.app-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.app-nav__link {
+  padding: 7px 14px;
+  border-radius: 8px;
+  color: #526071;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-nav__link:hover {
+  background: #e8edf5;
+  color: #172033;
+}
+
+.app-nav__link.is-active {
+  background: #172033;
+  color: #ffffff;
+}
+
 .header-meta {
   display: flex;
   gap: 8px;
@@ -76,6 +107,45 @@ h2 {
   background: #ffffff;
   color: #526071;
   font-size: 13px;
+  font-weight: 700;
+}
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: -8px 0 18px;
+}
+
+.text-link,
+.table-link {
+  color: #2563eb;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.text-link:hover,
+.table-link:hover {
+  text-decoration: underline;
+}
+
+.student-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 22px;
+  border: 1px solid #dfe7f2;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.student-hero p:last-child {
+  margin: 10px 0 0;
+  color: #617084;
   font-weight: 700;
 }
 
@@ -150,6 +220,11 @@ h2 {
   border-bottom: 1px solid #e8edf5;
 }
 
+.panel__header > div {
+  display: grid;
+  gap: 5px;
+}
+
 .panel__header span {
   color: #617084;
   font-size: 13px;
@@ -159,6 +234,114 @@ h2 {
 .chart-box {
   height: 320px;
   padding: 18px;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8edf5;
+  background: #fbfdff;
+}
+
+.filter-bar label,
+.search-form {
+  display: grid;
+  gap: 7px;
+  color: #526071;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.filter-bar input,
+.filter-bar select {
+  min-width: 150px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d9e2ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+}
+
+.search-form {
+  grid-template-columns: minmax(160px, 220px) 76px;
+  align-items: end;
+}
+
+.search-form button,
+.pagination-bar button {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #172033;
+  border-radius: 8px;
+  background: #172033;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.pagination-bar span {
+  color: #526071;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pagination-bar div {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-bar button:disabled {
+  border-color: #d9e2ef;
+  background: #eef2f7;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.segmented-control {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  min-height: 38px;
+  overflow: hidden;
+  border: 1px solid #d9e2ef;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.segmented-control__item {
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-right: 1px solid #d9e2ef;
+  background: transparent;
+  color: #526071;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.segmented-control__item:last-child {
+  border-right: 0;
+}
+
+.segmented-control__item.is-active {
+  background: #172033;
+  color: #ffffff;
+}
+
+.segmented-control__item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
 }
 
 .table-wrap {
@@ -178,6 +361,10 @@ td {
   text-align: left;
   font-size: 14px;
   white-space: nowrap;
+}
+
+tbody tr:hover td {
+  background: #f1f5fb;
 }
 
 th {
@@ -250,6 +437,34 @@ td {
   .app-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .student-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .panel__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .filter-bar,
+  .pagination-bar,
+  .page-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form input,
+  .search-form button,
+  .filter-bar input,
+  .filter-bar select {
+    width: 100%;
   }
 
   .header-meta {

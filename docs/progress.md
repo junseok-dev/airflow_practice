@@ -287,6 +287,72 @@ Airflow 런타임 실행은 미완료
 
 이로써 Airflow ETL 파이프라인이 정상 동작함을 확인했다.
 
+## 2026-04-27
+
+### 16. Windows 환경에서 Airflow 실행 가능성 점검
+
+- WSL 환경이 무거워 Windows 네이티브 Airflow 실행을 시도했다.
+- Windows 프로젝트 루트에 `.venv-airflow` 가상환경을 만들고 Airflow 3.2.0 설치를 완료했다.
+- Airflow CLI 실행 중 Windows에 없는 POSIX 전용 `fcntl` 모듈 문제를 확인했다.
+- 결론적으로 Windows 네이티브 Airflow UI 실행은 보류하고, WSL2 또는 Linux container가 필요하다고 정리했다.
+- Windows에서도 ETL 순서를 계속 검증할 수 있도록 `scripts/run_etl_windows.ps1`를 추가했다.
+- DAG는 bash 의존도를 낮추기 위해 `BashOperator`에서 `PythonOperator + subprocess.run()` 방식으로 변경했다.
+
+Windows ETL 실행:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_etl_windows.ps1
+```
+
+### 17. React 대시보드 인터랙션 개선
+
+- 주차별 학습 활동 라인 차트를 추가했다.
+- 평균 역량 레이더 차트를 추가했다.
+- 위험 교육생 테이블에 전체 / 고위험 / 중위험 필터를 추가했다.
+- `/students/:studentId` 상세 페이지를 추가했다.
+- `react-router-dom`을 설치하고 라우팅 구조를 만들었다.
+- 상세 페이지에서 개인 KPI, 주차별 활동, 개인 역량 레이더, 수강 이력을 볼 수 있게 했다.
+
+### 18. 교육생 목록/검색 화면 구현
+
+- `/students` 목록 페이지를 추가했다.
+- 위험도와 과정 모듈 필터를 구현했다.
+- 교육생 ID 검색 시 상세 페이지로 바로 이동하도록 만들었다.
+- 목록 페이지네이션을 구현했다.
+- 대시보드, 목록, 상세 화면이 연결되도록 링크 흐름을 정리했다.
+
+현재 프론트엔드 경로:
+
+```text
+/                  대시보드
+/students          교육생 목록/검색
+/students/:id      교육생 상세
+```
+
+### 19. Airflow 사용 방식 문서 보강
+
+- `docs/airflow.md`에 Airflow가 맡는 역할과 실제 데이터 처리 코드의 역할을 분리해 정리했다.
+- README에 Windows ETL 실행, WSL Airflow 실행, 현재 화면 경로를 반영했다.
+- Airflow는 분석 로직을 직접 담는 곳이 아니라 전처리 스크립트의 실행 순서와 실패 여부를 관리하는 오케스트레이션 도구로 사용했다고 명시했다.
+
+### 20. Docker Compose 기반 Airflow 실행 준비
+
+- Windows 네이티브 Airflow CLI의 `fcntl` 문제를 피하기 위해 Docker 컨테이너 실행 방식을 추가했다.
+- `Dockerfile.airflow`를 추가해 `apache/airflow:3.2.0` 이미지에 `pandas`를 설치하도록 했다.
+- `docker-compose.yaml`을 추가해 단일 컨테이너 `airflow standalone` 구성을 만들었다.
+- `dags`, `scripts`, `data`, `docs`를 컨테이너에 마운트하도록 설정했다.
+- `.airflow-docker/`는 Airflow DB, 로그, 로컬 상태 저장용으로 사용하고 Git에서 제외했다.
+- `.dockerignore`를 추가해 build context에 원천 데이터와 `node_modules`가 들어가지 않게 했다.
+- `scripts/start_airflow_docker.ps1`, `scripts/stop_airflow_docker.ps1`를 추가했다.
+- `docker compose config`로 compose 파일 문법을 확인했다.
+- Docker Desktop 데몬이 꺼져 있어 실제 build는 `dockerDesktopLinuxEngine` 연결 오류로 보류했다.
+
+실행 예정 명령:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start_airflow_docker.ps1
+```
+
 ---
 
 ## 다음 작업 (Next Steps)

@@ -56,7 +56,38 @@ Open University Learning Analytics Dataset(OULAD)의 실제 학습 데이터를 
 
 ## 실행 방법
 
-### 1. FastAPI 실행
+### 1. 데이터 mart 생성
+
+Windows에서 Airflow UI 없이 ETL만 실행할 때:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_etl_windows.ps1
+```
+
+WSL Ubuntu에서 Airflow UI로 DAG를 실행할 때:
+
+```bash
+bash scripts/start_airflow.sh
+```
+
+Docker 컨테이너에서 Airflow UI를 실행할 때:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start_airflow_docker.ps1
+```
+
+Docker 실행 전에는 Docker Desktop이 켜져 있어야 합니다.
+
+Airflow DAG는 다음 순서로 `data/mart/` JSON을 생성합니다.
+
+```text
+check_raw_files
+-> inspect_oulad_data
+-> transform_competency_data
+-> validate_mart_outputs
+```
+
+### 2. FastAPI 실행
 
 ```bash
 python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
@@ -69,7 +100,7 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/api/health
 ```
 
-### 2. React 실행
+### 3. React 실행
 
 ```bash
 cd frontend
@@ -95,10 +126,10 @@ http://127.0.0.1:5173
 
 ```text
 OULAD CSV
--> Airflow
+-> Airflow DAG 또는 Windows ETL script
 -> raw 데이터 검증
--> processed 데이터 생성
--> mart 데이터 생성
+-> processed CSV 생성
+-> mart JSON 생성
 -> FastAPI
 -> React Dashboard
 ```
@@ -116,8 +147,16 @@ FastAPI
 
 React
 -> FastAPI에서 받은 데이터를 차트와 테이블로 시각화
--> 필터와 상세 화면으로 교육생 역량 탐색
+-> 대시보드, 교육생 목록, 상세 화면으로 교육생 역량 탐색
 ```
+
+## 현재 구현 화면
+
+| 경로 | 설명 |
+| --- | --- |
+| `/` | KPI, 최종 결과 분포, 위험도 분포, 주차별 활동, 평균 역량 레이더, 위험 교육생 테이블 |
+| `/students` | 교육생 목록, 위험도/과정 필터, ID 검색, 페이지네이션 |
+| `/students/:studentId` | 개인 KPI, 주차별 활동 차트, 개인 역량 레이더, 수강 이력 |
 
 ## OULAD 데이터
 
@@ -267,14 +306,16 @@ FastAPI는 `data/mart/`의 JSON 또는 CSV 파일을 읽어 React에 전달합�
 
 ## Airflow 실습
 
-Airflow는 OULAD 원천 데이터를 대시보드용 데이터로 만드는 역할을 담당합니다.
+Airflow는 OULAD 원천 데이터를 대시보드용 데이터로 만드는 ETL 흐름을 관리합니다.
 
-- OULAD CSV 로드 태스크
-- 원천 데이터 검증 태스크
-- 평가 데이터 전처리 태스크
-- VLE 학습 활동 전처리 태스크
-- 교육생별 역량 지표 계산 태스크
-- mart JSON 생성 태스크
+이 프로젝트에서 Airflow가 직접 복잡한 pandas 로직을 담지는 않습니다. 실제 데이터 처리 코드는 `scripts/`에 두고, Airflow DAG는 그 스크립트를 순서대로 실행하고 마지막 산출물을 검증합니다.
+
+- `check_raw_files`: OULAD 원천 CSV 존재 여부 확인
+- `inspect_oulad_data`: 원천 데이터 탐색 스크립트 실행
+- `transform_competency_data`: processed/mart 데이터 생성 스크립트 실행
+- `validate_mart_outputs`: dashboard용 JSON 산출물 검증
+
+WSL Ubuntu에서는 Airflow UI에서 DAG 실행 성공을 확인했습니다. Windows 네이티브에서는 Airflow CLI가 POSIX 전용 모듈 문제로 막힐 수 있어, 같은 ETL 순서를 `scripts/run_etl_windows.ps1`로 실행합니다.
 
 ## Markdown 문서화 실습
 

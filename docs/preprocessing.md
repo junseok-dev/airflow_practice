@@ -1,6 +1,6 @@
 ﻿# 데이터 탐색 기록
 
-- 생성 시각: 2026-04-26 15:00:54
+- 생성 시각: 2026-05-08 07:53:48
 - 데이터셋: Open University Learning Analytics Dataset(OULAD)
 - 원천 경로: `data/raw/oulad/`
 - CSV 파일 수: 7개

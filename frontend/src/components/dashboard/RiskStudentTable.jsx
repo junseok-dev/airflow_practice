@@ -1,3 +1,7 @@
+import { Link } from 'react-router-dom';
+
+import { RISK_LABEL } from '../../utils/riskLabel.js';
+
 function formatScore(value) {
   if (value === null || value === undefined) {
     return '-';
@@ -6,12 +10,15 @@ function formatScore(value) {
   return Number(value).toFixed(1);
 }
 
-export default function RiskStudentTable({ students }) {
+export default function RiskStudentTable({ students, actions }) {
   return (
     <section className="panel panel--wide">
       <div className="panel__header">
-        <h2>위험 교육생</h2>
-        <span>{students.length}명 표시</span>
+        <div>
+          <h2>위험 교육생</h2>
+          <span>{students.length}명 표시</span>
+        </div>
+        {actions}
       </div>
       <div className="table-wrap">
         <table>
@@ -30,7 +37,11 @@ export default function RiskStudentTable({ students }) {
           <tbody>
             {students.map((student) => (
               <tr key={`${student.code_module}-${student.code_presentation}-${student.id_student}`}>
-                <td>{student.id_student}</td>
+                <td>
+                  <Link className="table-link" to={`/students/${student.id_student}`}>
+                    {student.id_student}
+                  </Link>
+                </td>
                 <td>
                   {student.code_module} / {student.code_presentation}
                 </td>
@@ -39,7 +50,7 @@ export default function RiskStudentTable({ students }) {
                 <td>{formatScore(student.engagement_score)}</td>
                 <td>{formatScore(student.competency_score)}</td>
                 <td>
-                  <span className={`badge badge--${student.risk_level}`}>{student.risk_level}</span>
+                  <span className={`badge badge--${student.risk_level}`}>{RISK_LABEL[student.risk_level] ?? student.risk_level}</span>
                 </td>
                 <td>{student.risk_reason}</td>
               </tr>

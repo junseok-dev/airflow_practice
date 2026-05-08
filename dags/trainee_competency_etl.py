@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import sys
-import shlex
+import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
@@ -35,6 +34,14 @@ REQUIRED_MART_FILES = [
     "competency_scores.json",
     "risk_students.json",
 ]
+
+
+def run_project_script(script_path: Path) -> None:
+    subprocess.run(
+        [PYTHON_BIN, str(script_path)],
+        cwd=PROJECT_ROOT,
+        check=True,
+    )
 
 
 def check_raw_files() -> None:
@@ -72,7 +79,7 @@ with DAG(
     description="Transform OULAD raw data into dashboard mart data.",
     default_args=default_args,
     start_date=datetime(2026, 4, 26),
-    schedule=None,
+    schedule="0 2 * * *",  # 매일 새벽 2시 자동 실행
     catchup=False,
     tags=["oulad", "competency", "dashboard"],
 ) as dag:
@@ -81,16 +88,16 @@ with DAG(
         python_callable=check_raw_files,
     )
 
-    inspect_oulad_data_task = BashOperator(
+    inspect_oulad_data_task = PythonOperator(
         task_id="inspect_oulad_data",
-        bash_command=f"{shlex.quote(PYTHON_BIN)} {shlex.quote(str(INSPECT_SCRIPT))}",
-        cwd=str(PROJECT_ROOT),
+        python_callable=run_project_script,
+        op_args=[INSPECT_SCRIPT],
     )
 
-    transform_competency_data_task = BashOperator(
+    transform_competency_data_task = PythonOperator(
         task_id="transform_competency_data",
-        bash_command=f"{shlex.quote(PYTHON_BIN)} {shlex.quote(str(TRANSFORM_SCRIPT))}",
-        cwd=str(PROJECT_ROOT),
+        python_callable=run_project_script,
+        op_args=[TRANSFORM_SCRIPT],
     )
 
     validate_mart_outputs_task = PythonOperator(

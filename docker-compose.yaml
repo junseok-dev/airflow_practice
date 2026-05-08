@@ -1,0 +1,20 @@
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow-practice
+    environment:
+      AIRFLOW_HOME: /opt/airflow-home
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.airflow-docker:/opt/airflow-home
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+      - ./docs:/opt/airflow/docs
+    command: airflow standalone

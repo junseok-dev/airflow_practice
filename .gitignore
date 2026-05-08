@@ -152,6 +152,7 @@ activemq-data/
 .envrc
 .local-notes.md
 .venv
+.venv-airflow/
 airflow_practice_env/
 env/
 venv/
@@ -224,6 +225,8 @@ data/raw/
 data/processed/
 data/mart/
 .airflow/
+.airflow-windows/
+.airflow-docker/
 *.log
 
 # Frontend
