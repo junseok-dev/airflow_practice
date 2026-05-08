@@ -19,17 +19,19 @@ export function fetchStudents({
   offset = 0,
   riskLevel = '',
   codeModule = '',
+  sortBy = '',
+  sortOrder = 'desc',
 } = {}) {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
 
-  if (riskLevel) {
-    params.set('risk_level', riskLevel);
-  }
-  if (codeModule) {
-    params.set('code_module', codeModule);
+  if (riskLevel) params.set('risk_level', riskLevel);
+  if (codeModule) params.set('code_module', codeModule);
+  if (sortBy) {
+    params.set('sort_by', sortBy);
+    params.set('sort_order', sortOrder);
   }
 
   return request(`/students?${params.toString()}`);
@@ -63,6 +65,10 @@ export function fetchStudentDetail(studentId) {
 
 export function fetchStudentCompetencies(studentId) {
   return request(`/students/${studentId}/competencies`);
+}
+
+export function fetchPrograms() {
+  return request('/programs');
 }
 
 export function fetchStudentWeeklyActivity(studentId, { limit = 500, offset = 0 } = {}) {

@@ -24,27 +24,40 @@ export function toCompetencyRadarData(source) {
   const diligenceScore = Number(source.diligence_score ?? source.average_diligence_score ?? 0);
   const competencyScore = Number(source.competency_score ?? source.average_competency_score ?? 0);
 
-  // 집계 데이터(대시보드)일 때만 6각형, 개인 데이터(상세 페이지)는 4각형
-  if (!source.final_result_counts) {
+  // 개인 데이터(상세 페이지): submission_rate 기반 6각형
+  if (source.submission_rate !== undefined) {
+    const submissionRate = Number(source.submission_rate ?? 0);
+    const onTimeRate = 100 - Number(source.late_submission_rate ?? 0);
     return [
       { metric: '평가 점수', score: Math.round(assessmentScore * 10) / 10 },
+      { metric: '제출률', score: Math.round(submissionRate * 10) / 10 },
       { metric: '학습 참여', score: Math.round(engagementScore * 10) / 10 },
-      { metric: '성실도', score: Math.round(diligenceScore * 10) / 10 },
       { metric: '종합 역량', score: Math.round(competencyScore * 10) / 10 },
+      { metric: '정시 제출', score: Math.round(onTimeRate * 10) / 10 },
+      { metric: '성실도', score: Math.round(diligenceScore * 10) / 10 },
     ];
   }
 
-  const counts = source.final_result_counts;
-  const totalReg = Number(source.total_registrations ?? 1);
-  const passRate = (((counts.Pass ?? 0) + (counts.Distinction ?? 0)) / totalReg) * 100;
-  const retentionRate = (1 - (counts.Withdrawn ?? 0) / totalReg) * 100;
+  // 집계 데이터(대시보드): final_result_counts 기반 6각형
+  if (source.final_result_counts) {
+    const counts = source.final_result_counts;
+    const totalReg = Number(source.total_registrations ?? 1);
+    const passRate = (((counts.Pass ?? 0) + (counts.Distinction ?? 0)) / totalReg) * 100;
+    const retentionRate = (1 - (counts.Withdrawn ?? 0) / totalReg) * 100;
+    return [
+      { metric: '평가 점수', score: Math.round(assessmentScore * 10) / 10 },
+      { metric: '합격률', score: Math.round(passRate * 10) / 10 },
+      { metric: '학습 참여', score: Math.round(engagementScore * 10) / 10 },
+      { metric: '종합 역량', score: Math.round(competencyScore * 10) / 10 },
+      { metric: '수료 유지율', score: Math.round(retentionRate * 10) / 10 },
+      { metric: '성실도', score: Math.round(diligenceScore * 10) / 10 },
+    ];
+  }
 
   return [
     { metric: '평가 점수', score: Math.round(assessmentScore * 10) / 10 },
-    { metric: '합격률', score: Math.round(passRate * 10) / 10 },
     { metric: '학습 참여', score: Math.round(engagementScore * 10) / 10 },
-    { metric: '종합 역량', score: Math.round(competencyScore * 10) / 10 },
-    { metric: '수료 유지율', score: Math.round(retentionRate * 10) / 10 },
     { metric: '성실도', score: Math.round(diligenceScore * 10) / 10 },
+    { metric: '종합 역량', score: Math.round(competencyScore * 10) / 10 },
   ];
 }

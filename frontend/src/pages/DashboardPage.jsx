@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SkeletonChartGrid, SkeletonKpiGrid } from '../components/common/Skeleton.jsx';
 
 import {
   fetchDashboardSummary,
@@ -92,11 +93,14 @@ export default function DashboardPage() {
     [summary],
   );
 
+  useEffect(() => { document.title = '대시보드 | 교육생 역량 분석'; }, []);
+
   if (status === 'loading') {
     return (
       <main className="app-shell">
         <AppHeader />
-        <div className="state-box">대시보드 데이터를 불러오는 중입니다.</div>
+        <SkeletonKpiGrid />
+        <SkeletonChartGrid />
       </main>
     );
   }

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
 import { fetchStudents } from '../api/dashboardApi.js';
 import AppHeader from '../components/layout/AppHeader.jsx';
 import { RISK_LABEL } from '../utils/riskLabel.js';
@@ -13,6 +12,11 @@ const RISK_OPTIONS = [
   { label: '중위험', value: 'medium' },
   { label: '저위험', value: 'low' },
 ];
+
+function SortIcon({ field, sortBy, sortOrder }) {
+  if (sortBy !== field) return <span className="sort-icon">↕</span>;
+  return <span className="sort-icon sort-icon--active">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+}
 
 function formatScore(value) {
   if (value === null || value === undefined) {
@@ -34,6 +38,8 @@ export default function StudentsPage() {
   const [riskLevel, setRiskLevel] = useState('');
   const [codeModule, setCodeModule] = useState('');
   const [studentIdQuery, setStudentIdQuery] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
@@ -46,6 +52,8 @@ export default function StudentsPage() {
           offset,
           riskLevel,
           codeModule,
+          sortBy,
+          sortOrder,
         });
         setStudents(data.items);
         setTotal(data.total);
@@ -57,7 +65,9 @@ export default function StudentsPage() {
     }
 
     loadStudents();
-  }, [offset, riskLevel, codeModule]);
+  }, [offset, riskLevel, codeModule, sortBy, sortOrder]);
+
+  useEffect(() => { document.title = '교육생 목록 | 교육생 역량 분석'; }, []);
 
   const pageNumber = Math.floor(offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -76,6 +86,16 @@ export default function StudentsPage() {
   function resetAndSetModule(nextCodeModule) {
     setOffset(0);
     setCodeModule(nextCodeModule);
+  }
+
+  function handleSort(field) {
+    setOffset(0);
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
   }
 
   function handleSearchSubmit(event) {
@@ -144,20 +164,32 @@ export default function StudentsPage() {
 
         {status !== 'error' && (
           <>
-            <div className="table-wrap">
+            <div className={`table-wrap${status === 'loading' && students.length > 0 ? ' table-wrap--refreshing' : ''}`}>
               <table>
                 <thead>
                   <tr>
                     <th>교육생 ID</th>
                     <th>과정</th>
                     <th>최종 결과</th>
-                    <th>평가</th>
-                    <th>참여</th>
-                    <th>성실도</th>
-                    <th>종합</th>
+                    <th className="th-sortable" onClick={() => handleSort('assessment_score')}>
+                      평가 <SortIcon field="assessment_score" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
+                    <th className="th-sortable" onClick={() => handleSort('engagement_score')}>
+                      참여 <SortIcon field="engagement_score" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
+                    <th className="th-sortable" onClick={() => handleSort('diligence_score')}>
+                      성실도 <SortIcon field="diligence_score" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
+                    <th className="th-sortable" onClick={() => handleSort('competency_score')}>
+                      종합 <SortIcon field="competency_score" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
                     <th>위험도</th>
-                    <th>활동일</th>
-                    <th>클릭</th>
+                    <th className="th-sortable" onClick={() => handleSort('active_days')}>
+                      활동일 <SortIcon field="active_days" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
+                    <th className="th-sortable" onClick={() => handleSort('total_clicks')}>
+                      클릭 <SortIcon field="total_clicks" sortBy={sortBy} sortOrder={sortOrder} />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -165,7 +197,7 @@ export default function StudentsPage() {
                     <tr key={`${student.code_module}-${student.code_presentation}-${student.id_student}`}>
                       <td>
                         <Link className="table-link" to={`/students/${student.id_student}`}>
-                          {student.id_student}
+                          #{student.id_student}
                         </Link>
                       </td>
                       <td>
@@ -187,25 +219,64 @@ export default function StudentsPage() {
               </table>
             </div>
 
+            {status === 'success' && students.length === 0 && (
+              <div className="empty-state">
+                조건에 맞는 교육생이 없습니다.
+                <p>필터를 변경해보세요.</p>
+              </div>
+            )}
+
             <div className="pagination-bar">
               <span>
                 {numberFormat(pageNumber)} / {numberFormat(totalPages)} 페이지
+                &nbsp;·&nbsp;
+                {resultLabel}
               </span>
-              <div>
+              <div className="pagination-controls">
                 <button
+                  className="pagination-btn pagination-btn--edge"
+                  disabled={!canGoPrevious}
+                  onClick={() => setOffset(0)}
+                  title="맨 처음"
+                  type="button"
+                >«</button>
+                {[100, 50, 10].map((n) => (
+                  <button
+                    key={`-${n}`}
+                    className="pagination-btn"
+                    disabled={!canGoPrevious}
+                    onClick={() => setOffset(Math.max(0, offset - n * PAGE_SIZE))}
+                    type="button"
+                  >-{n}</button>
+                ))}
+                <button
+                  className="pagination-btn"
                   disabled={!canGoPrevious}
                   onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                   type="button"
-                >
-                  이전
-                </button>
+                >이전</button>
                 <button
+                  className="pagination-btn"
                   disabled={!canGoNext}
                   onClick={() => setOffset(offset + PAGE_SIZE)}
                   type="button"
-                >
-                  다음
-                </button>
+                >다음</button>
+                {[10, 50, 100].map((n) => (
+                  <button
+                    key={`+${n}`}
+                    className="pagination-btn"
+                    disabled={!canGoNext}
+                    onClick={() => setOffset(Math.min((totalPages - 1) * PAGE_SIZE, offset + n * PAGE_SIZE))}
+                    type="button"
+                  >+{n}</button>
+                ))}
+                <button
+                  className="pagination-btn pagination-btn--edge"
+                  disabled={!canGoNext}
+                  onClick={() => setOffset((totalPages - 1) * PAGE_SIZE)}
+                  title="맨 끝"
+                  type="button"
+                >»</button>
               </div>
             </div>
           </>

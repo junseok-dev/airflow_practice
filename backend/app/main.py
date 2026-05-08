@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import dashboard, students
+from app.routers import dashboard, programs, students
 
 
 app = FastAPI(
@@ -26,3 +26,4 @@ def health_check() -> dict[str, str]:
 
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(students.router, prefix="/api", tags=["students"])
+app.include_router(programs.router, prefix="/api", tags=["programs"])

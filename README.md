@@ -90,22 +90,22 @@ check_raw_files
 ### 2. FastAPI 실행
 
 ```bash
-python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+PYTHONPATH=backend python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
 확인:
 
 ```text
-http://127.0.0.1:8000/docs
-http://127.0.0.1:8000/api/health
+http://127.0.0.1:8001/docs
+http://127.0.0.1:8001/api/health
 ```
 
 ### 3. React 실행
 
 ```bash
 cd frontend
-npm.cmd install
-npm.cmd run dev -- --host 127.0.0.1 --port 5173
+npm install
+npm run dev
 ```
 
 확인:
@@ -113,6 +113,21 @@ npm.cmd run dev -- --host 127.0.0.1 --port 5173
 ```text
 http://127.0.0.1:5173
 ```
+
+### 4. Docker로 한 번에 실행 (Airflow + FastAPI)
+
+Docker Desktop이 실행 중인 상태에서:
+
+```bash
+docker compose up --build
+```
+
+| 서비스 | URL |
+| --- | --- |
+| Airflow UI | http://localhost:8080 |
+| FastAPI | http://localhost:8001/docs |
+
+React 개발 서버는 로컬에서 별도 실행(`npm run dev`)합니다.
 
 ### Design & Documentation
 
@@ -150,13 +165,14 @@ React
 -> 대시보드, 교육생 목록, 상세 화면으로 교육생 역량 탐색
 ```
 
-## 현재 구현 화면
+## 구현된 화면
 
 | 경로 | 설명 |
 | --- | --- |
-| `/` | KPI, 최종 결과 분포, 위험도 분포, 주차별 활동, 평균 역량 레이더, 위험 교육생 테이블 |
-| `/students` | 교육생 목록, 위험도/과정 필터, ID 검색, 페이지네이션 |
-| `/students/:studentId` | 개인 KPI, 주차별 활동 차트, 개인 역량 레이더, 수강 이력 |
+| `/` | KPI 4종, 최종 결과/위험도 분포 차트, 주차별 활동, 역량 레이더, 위험 교육생 테이블 |
+| `/students` | 교육생 목록, 위험도/과정 필터, ID 검색, 지표별 컬럼 정렬, 페이지 점프 페이지네이션 |
+| `/students/:studentId` | 개인 KPI, 주차별 활동 차트, 개인 역량 레이더(6축), 수강 이력 테이블 |
+| `/programs` | 프로그램별 합격률·역량·세부 점수 비교 차트(3×2 구성), 산점도, 종합 순위표 |
 
 ## OULAD 데이터
 
@@ -293,16 +309,19 @@ Figma 기반 UI 구현 경험과 목업/와이어프레임을 실제 서비스 �
 - 화면 요소를 재사용 가능한 컴포넌트로 분리
 - PC 우선 레이아웃을 유지하면서 작은 화면에서도 깨지지 않게 조정
 
-## FastAPI 백엔드 실습
+## FastAPI 백엔드
 
-- `GET /api/dashboard/summary`
-- `GET /api/students`
-- `GET /api/students/{student_id}`
-- `GET /api/students/{student_id}/competencies`
-- `GET /api/weekly-activity`
-- `GET /api/risk-students`
+FastAPI는 `data/mart/`의 JSON 파일을 읽어 React에 전달합니다. mart 데이터는 TTL 캐시(10분)로 관리되어 Airflow ETL 실행 후 자동으로 최신 데이터가 반영됩니다.
 
-FastAPI는 `data/mart/`의 JSON 또는 CSV 파일을 읽어 React에 전달합니다.
+| 엔드포인트 | 설명 |
+| --- | --- |
+| `GET /api/health` | 서버 상태 확인 |
+| `GET /api/dashboard/summary` | 대시보드 KPI 요약 |
+| `GET /api/students` | 교육생 목록 (필터·정렬·페이지네이션) |
+| `GET /api/students/{student_id}` | 교육생 상세 및 수강 이력 |
+| `GET /api/weekly-activity` | 주차별 학습 활동량 |
+| `GET /api/risk-students` | 위험 교육생 목록 (역량 점수 오름차순) |
+| `GET /api/programs` | 프로그램별 성과 집계 |
 
 ## Airflow 실습
 

@@ -1,9 +1,10 @@
 services:
+
   airflow:
     build:
       context: .
       dockerfile: Dockerfile.airflow
-    container_name: airflow-practice
+    container_name: airflow-practice-airflow
     environment:
       AIRFLOW_HOME: /opt/airflow-home
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
@@ -18,3 +19,13 @@ services:
       - ./data:/opt/airflow/data
       - ./docs:/opt/airflow/docs
     command: airflow standalone
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: airflow-practice-api
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data

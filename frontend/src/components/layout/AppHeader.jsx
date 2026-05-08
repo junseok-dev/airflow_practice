@@ -15,6 +15,9 @@ export default function AppHeader() {
           <NavLink className={({ isActive }) => isActive ? 'app-nav__link is-active' : 'app-nav__link'} to="/students">
             교육생 목록
           </NavLink>
+          <NavLink className={({ isActive }) => isActive ? 'app-nav__link is-active' : 'app-nav__link'} to="/programs">
+            프로그램 비교
+          </NavLink>
         </nav>
         <div className="header-meta">
           <span>React</span>

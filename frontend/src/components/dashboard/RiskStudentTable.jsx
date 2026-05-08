@@ -39,7 +39,7 @@ export default function RiskStudentTable({ students, actions }) {
               <tr key={`${student.code_module}-${student.code_presentation}-${student.id_student}`}>
                 <td>
                   <Link className="table-link" to={`/students/${student.id_student}`}>
-                    {student.id_student}
+                    #{student.id_student}
                   </Link>
                 </td>
                 <td>

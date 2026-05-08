@@ -5,6 +5,11 @@ from app.services.mart_loader import load_json_array
 
 router = APIRouter()
 
+SORTABLE_FIELDS = {
+    "assessment_score", "engagement_score", "diligence_score",
+    "competency_score", "total_clicks", "active_days",
+}
+
 
 def paginate(items: list[dict], limit: int, offset: int) -> dict:
     return {
@@ -21,6 +26,8 @@ def get_students(
     offset: int = Query(default=0, ge=0),
     risk_level: str | None = Query(default=None, pattern="^(low|medium|high)$"),
     code_module: str | None = None,
+    sort_by: str | None = None,
+    sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
 ) -> dict:
     students = load_json_array("student_scores.json")
 
@@ -28,6 +35,10 @@ def get_students(
         students = [student for student in students if student.get("risk_level") == risk_level]
     if code_module:
         students = [student for student in students if student.get("code_module") == code_module]
+
+    if sort_by and sort_by in SORTABLE_FIELDS:
+        reverse = sort_order == "desc"
+        students = sorted(students, key=lambda s: s.get(sort_by) or 0, reverse=reverse)
 
     return paginate(students, limit, offset)
 
@@ -81,5 +92,15 @@ def get_risk_students(
 
     if risk_level:
         students = [student for student in students if student.get("risk_level") == risk_level]
+
+    # 어느 정도 활동한 학생(total_clicks > 0)을 우선 표시하고,
+    # 그 안에서 competency_score 오름차순 정렬 (가장 위험한 학생 상단)
+    students = sorted(
+        students,
+        key=lambda s: (
+            s.get("total_clicks") is None or s.get("total_clicks", 0) == 0,
+            s.get("competency_score", 0),
+        ),
+    )
 
     return paginate(students, limit, offset)

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import {
-  fetchStudentCompetencies,
   fetchStudentDetail,
   fetchStudentWeeklyActivity,
 } from '../api/dashboardApi.js';
 import CompetencyRadarChart from '../components/charts/CompetencyRadarChart.jsx';
 import WeeklyActivityChart from '../components/charts/WeeklyActivityChart.jsx';
 import KpiCard from '../components/common/KpiCard.jsx';
+import { SkeletonKpiGrid, SkeletonTable } from '../components/common/Skeleton.jsx';
 import AppHeader from '../components/layout/AppHeader.jsx';
 import { toCompetencyRadarData, toWeeklyChartData } from '../utils/chartData.js';
 import { RISK_LABEL } from '../utils/riskLabel.js';
@@ -28,7 +28,6 @@ function pickPrimaryRegistration(registrations = []) {
 export default function StudentDetailPage() {
   const { studentId } = useParams();
   const [detail, setDetail] = useState(null);
-  const [competencies, setCompetencies] = useState([]);
   const [weeklyActivity, setWeeklyActivity] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -37,14 +36,12 @@ export default function StudentDetailPage() {
     async function loadStudent() {
       try {
         setStatus('loading');
-        const [detailData, competencyData, weeklyData] = await Promise.all([
+        const [detailData, weeklyData] = await Promise.all([
           fetchStudentDetail(studentId),
-          fetchStudentCompetencies(studentId),
           fetchStudentWeeklyActivity(studentId, { limit: 500 }),
         ]);
 
         setDetail(detailData);
-        setCompetencies(competencyData.items);
         setWeeklyActivity(weeklyData.items);
         setStatus('success');
       } catch (err) {
@@ -57,21 +54,27 @@ export default function StudentDetailPage() {
   }, [studentId]);
 
   const primaryRegistration = pickPrimaryRegistration(detail?.registrations);
-  const primaryCompetency = competencies[0] ?? primaryRegistration;
   const weeklyChartData = useMemo(
     () => toWeeklyChartData(weeklyActivity),
     [weeklyActivity],
   );
   const competencyRadarData = useMemo(
-    () => toCompetencyRadarData(primaryCompetency),
-    [primaryCompetency],
+    () => toCompetencyRadarData(primaryRegistration),
+    [primaryRegistration],
   );
+
+  useEffect(() => {
+    document.title = status === 'success' && detail
+      ? `교육생 #${studentId} | 교육생 역량 분석`
+      : '교육생 상세 | 교육생 역량 분석';
+  }, [status, studentId, detail]);
 
   if (status === 'loading') {
     return (
       <main className="app-shell">
         <AppHeader />
-        <div className="state-box">교육생 상세 데이터를 불러오는 중입니다.</div>
+        <SkeletonKpiGrid />
+        <SkeletonTable rows={5} cols={9} />
       </main>
     );
   }
@@ -101,7 +104,7 @@ export default function StudentDetailPage() {
       <section className="student-hero">
         <div>
           <p className="eyebrow">Student Profile</p>
-          <h1>교육생 {studentId}</h1>
+          <h1>교육생 #{studentId}</h1>
           <p>
             {primaryRegistration.code_module} / {primaryRegistration.code_presentation} ·{' '}
             {primaryRegistration.final_result}
