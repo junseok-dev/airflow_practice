@@ -8,7 +8,7 @@ export default function AppHeader() {
         <h1>교육생 역량 분석 대시보드</h1>
       </div>
       <div className="header-right">
-        <nav className="app-nav">
+        <nav className="app-nav" aria-label="주요 메뉴">
           <NavLink className={({ isActive }) => isActive ? 'app-nav__link is-active' : 'app-nav__link'} to="/" end>
             대시보드
           </NavLink>

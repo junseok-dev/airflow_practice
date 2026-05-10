@@ -4,16 +4,11 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Label,
   LabelList,
-  Legend,
   ResponsiveContainer,
-  Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
 } from 'recharts';
 
 import { fetchPrograms } from '../api/dashboardApi.js';
@@ -30,59 +25,59 @@ const MODULE_COLORS = {
   GGG: '#65a30d',
 };
 
-function fmt1(v) {
-  return Number(v ?? 0).toFixed(1);
-}
-
-// 각 바를 프로그램 고유 색상으로 렌더링
-function ProgramBar({ x, y, width, height, code_module }) {
-  if (!height || height <= 0) return null;
-  const fill = MODULE_COLORS[code_module] ?? '#2563eb';
-  return <rect x={x} y={y} width={width} height={Math.max(0, height)} fill={fill} rx={5} ry={5} />;
-}
-
-function RankBadge({ rank }) {
-  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
-  if (medals[rank]) return <span style={{ fontSize: 18 }}>{medals[rank]}</span>;
-  return <span style={{ color: '#94a3b8', fontWeight: 700 }}>{rank}</span>;
-}
-
-function ScatterDot(props) {
-  const { cx, cy, payload } = props;
-  const r = Math.sqrt((props.zAxis?.range?.[0] ?? 400) + (payload.avg_competency_score / 100) * 800) / Math.PI * 4;
-  const color = MODULE_COLORS[payload.code_module] ?? '#2563eb';
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r={r} fill={color} fillOpacity={0.72} stroke={color} strokeWidth={2} />
-      <text x={cx} y={cy - r - 6} textAnchor="middle" fill="#172033" fontSize={13} fontWeight={700}>
-        {payload.code_module}
-      </text>
-    </g>
-  );
-}
-
-function ScatterTooltipContent({ payload }) {
-  if (!payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div style={{ background: '#fff', border: '1px solid #dfe7f2', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
-      <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#172033' }}>{d.code_module}</p>
-      <p style={{ margin: '2px 0', color: '#526071' }}>수강생: {d.total_students.toLocaleString('ko-KR')}명</p>
-      <p style={{ margin: '2px 0', color: '#526071' }}>합격률: {d.pass_rate}%</p>
-      <p style={{ margin: '2px 0', color: '#526071' }}>평균 역량: {d.avg_competency_score}</p>
-    </div>
-  );
-}
-
 const SORT_OPTIONS = [
   { label: '합격률', value: 'pass_rate' },
   { label: '평균 역량', value: 'avg_competency_score' },
   { label: '평균 평가', value: 'avg_assessment_score' },
-  { label: '고위험 비율 ↑', value: 'high_risk_rate' },
-  { label: '이탈률 ↑', value: 'withdrawal_rate' },
+  { label: '고위험 비율', value: 'high_risk_rate' },
+  { label: '이탈률', value: 'withdrawal_rate' },
 ];
 
 const LABEL_STYLE = { fontSize: 11, fontWeight: 700, fill: '#526071' };
+
+function fmt1(value) {
+  return Number(value ?? 0).toFixed(1);
+}
+
+function numberFormat(value) {
+  return new Intl.NumberFormat('ko-KR').format(value ?? 0);
+}
+
+function ProgramBar({ x, y, width, height, payload }) {
+  if (!height || height <= 0) return null;
+  const fill = MODULE_COLORS[payload.code_module] ?? '#2563eb';
+  return <rect x={x} y={y} width={width} height={Math.max(0, height)} fill={fill} rx={5} ry={5} />;
+}
+
+function ProgramChart({ title, subtitle, data, dataKey, unit = '' }) {
+  return (
+    <section className="panel">
+      <div className="panel__header">
+        <div>
+          <h2>{title}</h2>
+          <span>{subtitle}</span>
+        </div>
+      </div>
+      <div className="chart-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="code_module" tickLine={false} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} width={44} unit={unit} domain={unit === '%' ? [0, 100] : [0, 100]} />
+            <Tooltip formatter={(value) => `${fmt1(value)}${unit}`} />
+            <Bar dataKey={dataKey} name={title} shape={<ProgramBar />}>
+              <LabelList dataKey={dataKey} position="top" formatter={(value) => `${fmt1(value)}${unit}`} style={LABEL_STYLE} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+
+function RankBadge({ rank }) {
+  return <span style={{ color: rank <= 3 ? '#172033' : '#94a3b8', fontWeight: 800 }}>{rank}</span>;
+}
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState([]);
@@ -94,19 +89,24 @@ export default function ProgramsPage() {
     fetchPrograms()
       .then(setPrograms)
       .then(() => setStatus('success'))
-      .catch((err) => { setError(err.message); setStatus('error'); });
+      .catch((err) => {
+        setError(err.message);
+        setStatus('error');
+      });
   }, []);
 
-  useEffect(() => { document.title = '프로그램 비교 | 교육생 역량 분석'; }, []);
+  useEffect(() => {
+    document.title = '프로그램 비교 | 교육생 역량 분석';
+  }, []);
 
-  // 각 차트마다 해당 지표 기준으로 정렬
-  const byPassRate    = useMemo(() => [...programs].sort((a, b) => b.pass_rate - a.pass_rate), [programs]);
-  const byRisk        = useMemo(() => [...programs].sort((a, b) => a.withdrawal_rate - b.withdrawal_rate), [programs]);
-  const byCompetency  = useMemo(() => [...programs].sort((a, b) => b.avg_competency_score - a.avg_competency_score), [programs]);
-  const byAssessment  = useMemo(() => [...programs].sort((a, b) => b.avg_assessment_score - a.avg_assessment_score), [programs]);
-  const byEngagement  = useMemo(() => [...programs].sort((a, b) => b.avg_engagement_score - a.avg_engagement_score), [programs]);
-  const byDiligence   = useMemo(() => [...programs].sort((a, b) => b.avg_diligence_score - a.avg_diligence_score), [programs]);
-  const sorted        = useMemo(() => [...programs].sort((a, b) => b[sortKey] - a[sortKey]), [programs, sortKey]);
+  const byPassRate = useMemo(() => [...programs].sort((a, b) => b.pass_rate - a.pass_rate), [programs]);
+  const byRisk = useMemo(() => [...programs].sort((a, b) => a.withdrawal_rate - b.withdrawal_rate), [programs]);
+  const byCompetency = useMemo(() => [...programs].sort((a, b) => b.avg_competency_score - a.avg_competency_score), [programs]);
+  const byAssessment = useMemo(() => [...programs].sort((a, b) => b.avg_assessment_score - a.avg_assessment_score), [programs]);
+  const byEngagement = useMemo(() => [...programs].sort((a, b) => b.avg_engagement_score - a.avg_engagement_score), [programs]);
+  const byDiligence = useMemo(() => [...programs].sort((a, b) => b.avg_diligence_score - a.avg_diligence_score), [programs]);
+  const sorted = useMemo(() => [...programs].sort((a, b) => b[sortKey] - a[sortKey]), [programs, sortKey]);
+  const selectedSortLabel = SORT_OPTIONS.find((option) => option.value === sortKey)?.label;
 
   if (status === 'loading') {
     return (
@@ -116,8 +116,14 @@ export default function ProgramsPage() {
       </main>
     );
   }
+
   if (status === 'error') {
-    return <main className="app-shell"><AppHeader /><div className="state-box state-box--error">{error}</div></main>;
+    return (
+      <main className="app-shell">
+        <AppHeader />
+        <div className="state-box state-box--error">{error}</div>
+      </main>
+    );
   }
 
   return (
@@ -135,7 +141,6 @@ export default function ProgramsPage() {
         </div>
       </div>
 
-      {/* 프로그램 색상 범례 */}
       <div className="program-legend">
         {Object.entries(MODULE_COLORS).map(([module, color]) => (
           <span key={module} className="program-legend__item">
@@ -143,155 +148,34 @@ export default function ProgramsPage() {
             {module}
           </span>
         ))}
-        <span className="program-legend__note">차트 색상은 프로그램을 나타냄 · 각 차트는 해당 지표 기준 정렬</span>
+        <span className="program-legend__note">색상은 프로그램 모듈을 의미합니다.</span>
       </div>
 
-      <section className="dashboard-grid" style={{ marginTop: 12, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+      <section className="dashboard-grid dashboard-grid--programs">
+        <ProgramChart title="합격률" subtitle="높을수록 좋음" data={byPassRate} dataKey="pass_rate" unit="%" />
+        <ProgramChart title="이탈률" subtitle="낮을수록 좋음" data={byRisk} dataKey="withdrawal_rate" unit="%" />
+        <ProgramChart title="종합 역량" subtitle="평균 역량 점수" data={byCompetency} dataKey="avg_competency_score" />
+        <ProgramChart title="평가 점수" subtitle="평균 평가 점수" data={byAssessment} dataKey="avg_assessment_score" />
+        <ProgramChart title="참여 점수" subtitle="평균 참여 점수" data={byEngagement} dataKey="avg_engagement_score" />
+        <ProgramChart title="성실도" subtitle="평균 성실도 점수" data={byDiligence} dataKey="avg_diligence_score" />
 
-        {/* 행 1: 합격률 / 이탈률 vs 고위험 / 종합 역량 */}
-        <section className="panel">
-          <div className="panel__header">
-            <div><h2>합격률 비교</h2><span>높을수록 좋음 · 내림차순</span></div>
-          </div>
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byPassRate} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="code_module" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} width={40} unit="%" domain={[0, 100]} />
-                <Tooltip formatter={(v) => `${v}%`} />
-                <Bar dataKey="pass_rate" name="합격률" shape={<ProgramBar />}>
-                  <LabelList dataKey="pass_rate" position="top" formatter={(v) => `${v}%`} style={LABEL_STYLE} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel__header">
-            <div><h2>이탈률 vs 고위험 비율</h2><span>낮을수록 좋음 · 이탈률 오름차순</span></div>
-          </div>
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byRisk} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="code_module" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} width={40} unit="%" />
-                <Tooltip formatter={(v) => `${v}%`} />
-                <Legend />
-                <Bar dataKey="withdrawal_rate" name="이탈률" fill="#f87171" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="high_risk_rate" name="고위험 비율" fill="#fbbf24" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel__header">
-            <div><h2>종합 역량</h2><span>높을수록 좋음 · 내림차순</span></div>
-          </div>
-          <div className="chart-box">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byCompetency} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                <XAxis dataKey="code_module" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} width={40} domain={[0, 100]} />
-                <Tooltip />
-                <Bar dataKey="avg_competency_score" name="종합 역량" shape={<ProgramBar />}>
-                  <LabelList dataKey="avg_competency_score" position="top" formatter={fmt1} style={LABEL_STYLE} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* 행 2: 평가 / 참여 / 성실도 */}
-        {[
-          { title: '평가 점수', dataKey: 'avg_assessment_score', data: byAssessment },
-          { title: '참여 점수', dataKey: 'avg_engagement_score', data: byEngagement },
-          { title: '성실도',    dataKey: 'avg_diligence_score',  data: byDiligence },
-        ].map(({ title, dataKey, data }) => (
-          <section key={title} className="panel">
-            <div className="panel__header">
-              <div><h2>{title}</h2><span>높을수록 좋음 · 내림차순</span></div>
-            </div>
-            <div className="chart-box">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
-                  <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                  <XAxis dataKey="code_module" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} width={40} domain={[0, 100]} />
-                  <Tooltip />
-                  <Bar dataKey={dataKey} name={title} shape={<ProgramBar />}>
-                    <LabelList dataKey={dataKey} position="top" formatter={fmt1} style={LABEL_STYLE} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-        ))}
-
-        {/* 산점도: 표본 크기 vs 합격률 */}
         <section className="panel panel--wide">
           <div className="panel__header">
             <div>
-              <h2>표본 크기 vs 합격률</h2>
-              <span>점 크기 = 평균 역량 점수 반영 · 표본이 작으면 합격률 해석에 주의</span>
-            </div>
-          </div>
-          <div className="chart-box" style={{ height: 380 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 24, right: 48, bottom: 36, left: 16 }}>
-                <CartesianGrid stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="total_students"
-                  name="수강생 수"
-                  type="number"
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => `${(v / 1000).toFixed(1)}k`}
-                >
-                  <Label value="수강생 수 (표본 크기)" offset={-16} position="insideBottom" style={{ fill: '#526071', fontSize: 12 }} />
-                </XAxis>
-                <YAxis
-                  dataKey="pass_rate"
-                  name="합격률"
-                  type="number"
-                  unit="%"
-                  domain={[30, 80]}
-                  tickLine={false}
-                  axisLine={false}
-                  width={52}
-                >
-                  <Label value="합격률 (%)" angle={-90} position="insideLeft" dy={40} style={{ fill: '#526071', fontSize: 12 }} />
-                </YAxis>
-                <ZAxis dataKey="avg_competency_score" range={[300, 1400]} name="평균 역량" />
-                <Tooltip cursor={{ strokeDasharray: '4 4', stroke: '#94a3b8' }} content={<ScatterTooltipContent />} />
-                <Scatter data={programs} shape={<ScatterDot />} />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* 종합 순위표 */}
-        <section className="panel panel--wide">
-          <div className="panel__header">
-            <div>
-              <h2>프로그램 종합 순위표</h2>
-              <span>{sorted[0]?.code_module}이 현재 {SORT_OPTIONS.find(o => o.value === sortKey)?.label} 기준 1위</span>
+              <h2>프로그램 종합 순위</h2>
+              <span>{sorted[0]?.code_module}이 현재 {selectedSortLabel} 기준 1위</span>
             </div>
             <div className="programs-sort">
               <span>정렬 기준</span>
-              {SORT_OPTIONS.map((opt) => (
+              {SORT_OPTIONS.map((option) => (
                 <button
-                  key={opt.value}
-                  className={sortKey === opt.value ? 'segmented-control__item is-active' : 'segmented-control__item'}
+                  key={option.value}
+                  className={sortKey === option.value ? 'segmented-control__item is-active' : 'segmented-control__item'}
                   style={{ border: '1px solid #d9e2ef', borderRadius: 8 }}
-                  onClick={() => setSortKey(opt.value)}
+                  onClick={() => setSortKey(option.value)}
                   type="button"
                 >
-                  {opt.label}
+                  {option.label}
                 </button>
               ))}
             </div>
@@ -314,43 +198,30 @@ export default function ProgramsPage() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((p, idx) => (
-                  <tr key={p.code_module}>
+                {sorted.map((program, idx) => (
+                  <tr key={program.code_module}>
                     <td style={{ textAlign: 'center' }}><RankBadge rank={idx + 1} /></td>
                     <td>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: MODULE_COLORS[p.code_module], display: 'inline-block' }} />
-                        <strong>{p.code_module}</strong>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: MODULE_COLORS[program.code_module], display: 'inline-block' }} />
+                        <strong>{program.code_module}</strong>
                       </span>
                     </td>
-                    <td>{p.total_students.toLocaleString('ko-KR')}명</td>
-                    <td>
-                      <span style={{ color: p.pass_rate >= 55 ? '#0f766e' : p.pass_rate >= 45 ? '#d97706' : '#dc2626', fontWeight: 700 }}>
-                        {fmt1(p.pass_rate)}%
-                      </span>
-                    </td>
-                    <td>{fmt1(p.distinction_rate)}%</td>
-                    <td>
-                      <span style={{ color: p.withdrawal_rate >= 35 ? '#dc2626' : '#526071', fontWeight: p.withdrawal_rate >= 35 ? 700 : 400 }}>
-                        {fmt1(p.withdrawal_rate)}%
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ color: p.high_risk_rate >= 50 ? '#dc2626' : '#526071', fontWeight: p.high_risk_rate >= 50 ? 700 : 400 }}>
-                        {fmt1(p.high_risk_rate)}%
-                      </span>
-                    </td>
-                    <td>{fmt1(p.avg_competency_score)}</td>
-                    <td>{fmt1(p.avg_assessment_score)}</td>
-                    <td>{fmt1(p.avg_engagement_score)}</td>
-                    <td>{fmt1(p.avg_diligence_score)}</td>
+                    <td>{numberFormat(program.total_students)}명</td>
+                    <td>{fmt1(program.pass_rate)}%</td>
+                    <td>{fmt1(program.distinction_rate)}%</td>
+                    <td>{fmt1(program.withdrawal_rate)}%</td>
+                    <td>{fmt1(program.high_risk_rate)}%</td>
+                    <td>{fmt1(program.avg_competency_score)}</td>
+                    <td>{fmt1(program.avg_assessment_score)}</td>
+                    <td>{fmt1(program.avg_engagement_score)}</td>
+                    <td>{fmt1(program.avg_diligence_score)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
-
       </section>
     </main>
   );

@@ -50,7 +50,9 @@ export default function RiskStudentTable({ students, actions }) {
                 <td>{formatScore(student.engagement_score)}</td>
                 <td>{formatScore(student.competency_score)}</td>
                 <td>
-                  <span className={`badge badge--${student.risk_level}`}>{RISK_LABEL[student.risk_level] ?? student.risk_level}</span>
+                  <span className={`badge badge--${student.risk_level}`}>
+                    {RISK_LABEL[student.risk_level] ?? student.risk_level}
+                  </span>
                 </td>
                 <td>{student.risk_reason}</td>
               </tr>

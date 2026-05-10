@@ -9,8 +9,8 @@ const MODULE_OPTIONS = ['', 'AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF', 'GGG'];
 const RISK_OPTIONS = [
   { label: '전체', value: '' },
   { label: '고위험', value: 'high' },
-  { label: '중위험', value: 'medium' },
-  { label: '저위험', value: 'low' },
+  { label: '위험', value: 'medium' },
+  { label: '정상', value: 'low' },
 ];
 
 function SortIcon({ field, sortBy, sortOrder }) {
@@ -67,14 +67,18 @@ export default function StudentsPage() {
     loadStudents();
   }, [offset, riskLevel, codeModule, sortBy, sortOrder]);
 
-  useEffect(() => { document.title = '교육생 목록 | 교육생 역량 분석'; }, []);
+  useEffect(() => {
+    document.title = '교육생 목록 | 교육생 역량 분석';
+  }, []);
 
   const pageNumber = Math.floor(offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const canGoPrevious = offset > 0;
   const canGoNext = offset + PAGE_SIZE < total;
   const resultLabel = useMemo(
-    () => `${numberFormat(total)}건 중 ${numberFormat(offset + 1)}-${numberFormat(Math.min(offset + PAGE_SIZE, total))}`,
+    () => total > 0
+      ? `${numberFormat(total)}건 중 ${numberFormat(offset + 1)}-${numberFormat(Math.min(offset + PAGE_SIZE, total))}`
+      : '0건',
     [offset, total],
   );
 
@@ -209,7 +213,9 @@ export default function StudentsPage() {
                       <td>{formatScore(student.diligence_score)}</td>
                       <td>{formatScore(student.competency_score)}</td>
                       <td>
-                        <span className={`badge badge--${student.risk_level}`}>{RISK_LABEL[student.risk_level] ?? student.risk_level}</span>
+                        <span className={`badge badge--${student.risk_level}`}>
+                          {RISK_LABEL[student.risk_level] ?? student.risk_level}
+                        </span>
                       </td>
                       <td>{numberFormat(student.active_days)}</td>
                       <td>{numberFormat(student.total_clicks)}</td>
@@ -237,18 +243,9 @@ export default function StudentsPage() {
                   className="pagination-btn pagination-btn--edge"
                   disabled={!canGoPrevious}
                   onClick={() => setOffset(0)}
-                  title="맨 처음"
+                  title="처음"
                   type="button"
                 >«</button>
-                {[100, 50, 10].map((n) => (
-                  <button
-                    key={`-${n}`}
-                    className="pagination-btn"
-                    disabled={!canGoPrevious}
-                    onClick={() => setOffset(Math.max(0, offset - n * PAGE_SIZE))}
-                    type="button"
-                  >-{n}</button>
-                ))}
                 <button
                   className="pagination-btn"
                   disabled={!canGoPrevious}
@@ -261,20 +258,11 @@ export default function StudentsPage() {
                   onClick={() => setOffset(offset + PAGE_SIZE)}
                   type="button"
                 >다음</button>
-                {[10, 50, 100].map((n) => (
-                  <button
-                    key={`+${n}`}
-                    className="pagination-btn"
-                    disabled={!canGoNext}
-                    onClick={() => setOffset(Math.min((totalPages - 1) * PAGE_SIZE, offset + n * PAGE_SIZE))}
-                    type="button"
-                  >+{n}</button>
-                ))}
                 <button
                   className="pagination-btn pagination-btn--edge"
                   disabled={!canGoNext}
                   onClick={() => setOffset((totalPages - 1) * PAGE_SIZE)}
-                  title="맨 끝"
+                  title="마지막"
                   type="button"
                 >»</button>
               </div>

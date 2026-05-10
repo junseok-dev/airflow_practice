@@ -1,7 +1,7 @@
 const FILTERS = [
   { label: '전체', value: '' },
+  { label: '위험', value: 'medium' },
   { label: '고위험', value: 'high' },
-  { label: '중위험', value: 'medium' },
 ];
 
 export default function RiskFilter({ value, onChange }) {

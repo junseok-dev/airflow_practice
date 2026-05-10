@@ -13,7 +13,7 @@ export default function WeeklyActivityChart({ data }) {
     <section className="panel">
       <div className="panel__header">
         <h2>주차별 학습 활동</h2>
-        <span>표본 클릭 추세</span>
+        <span>주차별 클릭 추세</span>
       </div>
       <div className="chart-box">
         <ResponsiveContainer width="100%" height="100%">

@@ -93,7 +93,9 @@ export default function DashboardPage() {
     [summary],
   );
 
-  useEffect(() => { document.title = '대시보드 | 교육생 역량 분석'; }, []);
+  useEffect(() => {
+    document.title = '대시보드 | 교육생 역량 분석';
+  }, []);
 
   if (status === 'loading') {
     return (
@@ -118,11 +120,39 @@ export default function DashboardPage() {
     <main className="app-shell">
       <AppHeader />
 
-      <div className="page-toolbar">
-        <Link className="text-link" to="/students">
-          전체 교육생 보기
-        </Link>
-      </div>
+      <section className="dashboard-hero" aria-labelledby="dashboard-title">
+        <div className="dashboard-hero__content">
+          <p className="eyebrow">Pipeline Overview</p>
+          <h1 id="dashboard-title">학습 위험 신호를 빠르게 발견하는 운영 대시보드</h1>
+          <p>
+            Airflow가 갱신한 mart 데이터를 기반으로 교육생 참여, 평가, 성실도와 위험도를
+            한 화면에서 점검합니다.
+          </p>
+        </div>
+        <div className="dashboard-hero__actions">
+          <Link className="button-link button-link--primary" to="/students">
+            교육생 목록
+          </Link>
+          <Link className="button-link" to="/programs">
+            프로그램 비교
+          </Link>
+        </div>
+      </section>
+
+      <section className="insight-strip" aria-label="데이터 파이프라인 요약">
+        <div>
+          <span>데이터 기준</span>
+          <strong>OULAD mart JSON</strong>
+        </div>
+        <div>
+          <span>자동화 흐름</span>
+          <strong>Raw 확인 / Transform / Validate</strong>
+        </div>
+        <div>
+          <span>현재 우선순위</span>
+          <strong>고위험 교육생 선제 대응</strong>
+        </div>
+      </section>
 
       <section className="kpi-grid">
         <KpiCard

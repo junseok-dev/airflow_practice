@@ -38,6 +38,106 @@ textarea {
   margin-bottom: 28px;
 }
 
+.dashboard-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding: 26px 28px;
+  border: 1px solid #dfe7f2;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 118, 110, 0.08)),
+    #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-hero__content {
+  max-width: 760px;
+}
+
+.dashboard-hero__content p:last-child {
+  margin: 12px 0 0;
+  color: #526071;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.dashboard-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #cbd6e4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.button-link:hover {
+  border-color: #93a4ba;
+  background: #f8fafc;
+}
+
+.button-link--primary {
+  border-color: #172033;
+  background: #172033;
+  color: #ffffff;
+}
+
+.button-link--primary:hover {
+  border-color: #243044;
+  background: #243044;
+}
+
+.insight-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.insight-strip div {
+  min-height: 78px;
+  padding: 16px 18px;
+  border: 1px solid #dfe7f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.insight-strip span,
+.insight-strip strong {
+  display: block;
+}
+
+.insight-strip span {
+  margin-bottom: 8px;
+  color: #617084;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.insight-strip strong {
+  color: #172033;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: #2563eb;
@@ -197,6 +297,11 @@ h2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.dashboard-grid--programs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 12px;
 }
 
 .panel {
@@ -638,7 +743,8 @@ tbody tr {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dashboard-grid {
+  .dashboard-grid,
+  .dashboard-grid--programs {
     grid-template-columns: 1fr;
   }
 }
@@ -651,6 +757,22 @@ tbody tr {
   .app-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px;
+  }
+
+  .dashboard-hero__actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .insight-strip {
+    grid-template-columns: 1fr;
   }
 
   .student-hero {
